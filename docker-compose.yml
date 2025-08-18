@@ -21,6 +21,12 @@ services:
       - ./backend:/app
     depends_on:
       - db
+      - rabbitmq
+    environment:
+      SPRING_RABBITMQ_HOST: rabbitmq
+      SPRING_RABBITMQ_PORT: 5672
+      SPRING_RABBITMQ_USERNAME: guest
+      SPRING_RABBITMQ_PASSWORD: guest
 
   db:
     image: postgres:latest
@@ -31,8 +37,17 @@ services:
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
       POSTGRES_DB: ${POSTGRES_DB}
     ports:
-      - "5432:5432"
+      - "5433:5432"
     volumes:
       - db_data:/var/lib/postgresql/data
+
+  rabbitmq:
+    image: rabbitmq:management
+    ports:
+      - "15672:15672"  # RabbitMQ Management UI
+      - "5672:5672"    # RabbitMQ AMQP protocol
+    environment:
+      RABBITMQ_DEFAULT_USER: guest
+      RABBITMQ_DEFAULT_PASS: guest
 volumes:
   db_data:
