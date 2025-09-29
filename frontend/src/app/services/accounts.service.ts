@@ -51,7 +51,7 @@ export class AccountsService {
   ): Observable<void> {
     return this.httpClient.post<void>(
       `${environment.backEndHost}/accounts/transfer`,
-      { accountId, amount, description, accountDestination }
+      { accountId, accountDestination, amount, description }
     );
   }
 }

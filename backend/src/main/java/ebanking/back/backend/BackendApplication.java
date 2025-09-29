@@ -7,6 +7,7 @@ import org.springframework.boot.CommandLineRunner;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.context.annotation.Bean;
+import org.springframework.security.crypto.password.PasswordEncoder;
 
 import ebanking.back.backend.dtos.BankAccountDTO;
 import ebanking.back.backend.dtos.CurrentAccountDTO;
@@ -18,17 +19,21 @@ import ebanking.back.backend.services.BankAccountService;
 @SpringBootApplication
 public class BackendApplication {
 
+    static int x;
 	public static void main(String[] args) {
 		SpringApplication.run(BackendApplication.class, args);
 		System.out.println("Backend application started successfully.");
+        System.out.println(x);
 	}
  @Bean
-    CommandLineRunner commandLineRunner(BankAccountService bankAccountService){
+    CommandLineRunner commandLineRunner(BankAccountService bankAccountService, PasswordEncoder passwordEncoder){
         return args -> {
            Stream.of("Hassan","Imane","Mohamed").forEach(name->{
                CustomerDTO customer=new CustomerDTO();
-               customer.setName(name);
+               customer.setUsername(name);
                customer.setEmail(name+"@gmail.com");
+               customer.setPassword(passwordEncoder.encode("123456"));
+               customer.setRole("USER");
                bankAccountService.saveCustomer(customer);
            });
            bankAccountService.listCustomers().forEach(customer->{

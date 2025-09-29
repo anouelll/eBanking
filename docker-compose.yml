@@ -43,11 +43,16 @@ services:
 
   rabbitmq:
     image: rabbitmq:management
+    container_name: ebanking-rabbitmq
     ports:
       - "15672:15672"  # RabbitMQ Management UI
       - "5672:5672"    # RabbitMQ AMQP protocol
     environment:
       RABBITMQ_DEFAULT_USER: guest
       RABBITMQ_DEFAULT_PASS: guest
+    volumes:
+      - rabbitmq_data:/var/lib/rabbitmq
+
 volumes:
   db_data:
+  rabbitmq_data:

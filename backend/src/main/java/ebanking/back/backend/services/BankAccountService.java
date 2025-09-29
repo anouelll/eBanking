@@ -38,7 +38,7 @@ public interface BankAccountService {
 
     List<CustomerDTO> searchCustomers(String keyword);
 
-
+    List<BankAccountDTO> getAccountDTOs(Long customerId) throws BankAccountNotFoundException, CustomerNotFoundException;
 
 
 }

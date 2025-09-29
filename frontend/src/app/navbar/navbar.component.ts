@@ -1,6 +1,7 @@
-import { Component } from '@angular/core';
+import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { RouterModule} from '@angular/router';
+import { Router, RouterModule} from '@angular/router';
+import { AuthService } from '../services/auth.service';
 
 
 @Component({
@@ -10,6 +11,15 @@ import { RouterModule} from '@angular/router';
   styleUrl: './navbar.component.css', 
   standalone: true
 })
-export class NavbarComponent {
+export class NavbarComponent implements OnInit {
 
+  constructor(public authService : AuthService, private route : Router) { }
+
+  ngOnInit(): void {
+  }
+
+  handleLogout(): void {
+  this.authService.logout();
+  this.route.navigateByUrl('/login');
+  }
 }

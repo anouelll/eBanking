@@ -3,6 +3,7 @@ import { Injectable } from '@angular/core';
 import { Customer } from '../model/customer.model';
 import { Observable } from 'rxjs';
 import { environment} from '../environments/environment';
+import { Account } from '../model/account.model';
 
 @Injectable({
   providedIn: 'root'
@@ -28,4 +29,8 @@ export class CustomerServiceTsService {
     return this.http.delete<void>(environment.backEndHost + "/customers/" + customer.id);
   }
 
+  public getCustomerAccounts(customerId: number): Observable<Array<Account>> {
+    return this.http.get<Array<any>>(environment.backEndHost + `/${customerId}/accounts`);
+
+}
 }

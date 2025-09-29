@@ -1,0 +1,42 @@
+<div class="p-3">
+  <div class="card">
+    <div class="card-header">Sign Up</div>
+    <div class="card-body">
+      <form [formGroup] = "registerFormGroup" (ngSubmit) = "handleRegister()">
+        <div class="mb-3">
+          <label class="form-label">Username</label>
+          <input type="text" class="form-control" formControlName="username" />
+        </div>
+
+        <div class="mb-3">
+          <label class="form-label">Email</label>
+          <input type="email" class="form-control" formControlName="email" />
+        </div>
+         <div class="mb-3">
+          <label class="form-label">Password</label>
+          <input type="password" class="form-control" formControlName="password" />
+        </div>
+        <div class="form-check form-check-inline">
+                <label class="form-check-label">USER </label>
+                <input
+                  type="radio"
+                  formControlName="role"
+                  value="USER"
+                />
+              </div>
+              <div class="form-check form-check-inline">
+                <label class="form-check-label">ADMIN  </label>
+                <input
+                  type="radio"
+                  formControlName="role"
+                  value="ADMIN"
+                />
+              </div>
+        
+        <button class="btn btn-success">Sign Up</button>
+        <button class="btn btn-link" (click) = "navigateToLogin()">Already have an account? Log in</button>
+
+      </form>
+    </div>
+  </div>
+</div>

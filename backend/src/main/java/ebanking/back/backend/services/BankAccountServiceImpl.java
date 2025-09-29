@@ -1,10 +1,12 @@
 package ebanking.back.backend.services;
 
+import java.time.LocalDateTime;
 import java.util.Date;
 import java.util.List;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
+import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
@@ -26,6 +28,7 @@ import ebanking.back.backend.exceptions.BalanceNotSufficientException;
 import ebanking.back.backend.exceptions.BankAccountNotFoundException;
 import ebanking.back.backend.exceptions.CustomerNotFoundException;
 import ebanking.back.backend.mappers.BankAccountMapperImpl;
+import ebanking.back.backend.model.TransactionEvent;
 import ebanking.back.backend.repositories.AccountOperationRepository;
 import ebanking.back.backend.repositories.BankAccountRepository;
 import ebanking.back.backend.repositories.CustomerRepository;
@@ -43,7 +46,8 @@ public class BankAccountServiceImpl implements BankAccountService {
     private BankAccountRepository bankAccountRepository;
     private AccountOperationRepository accountOperationRepository;
     private BankAccountMapperImpl dtoMapper;
-    private final NotificationService notificationService;
+    private TransactionPublisher transactionPublisher;
+    // private final NotificationService notificationService;
 
     @Override
     public CustomerDTO saveCustomer(CustomerDTO customerDTO) {
@@ -133,6 +137,17 @@ public class BankAccountServiceImpl implements BankAccountService {
         accountOperationRepository.save(accountOperation);
         bankAccount.setBalance(bankAccount.getBalance() - amount);
         bankAccountRepository.save(bankAccount);
+
+        // Publish transaction event to RabbitMQ
+        TransactionEvent transactionEvent = new TransactionEvent();
+        transactionEvent.setCustomerId(bankAccount.getCustomer().getId());
+        transactionEvent.setTransactionId(accountOperation.getId());
+        transactionEvent.setAccountId(bankAccount.getId());
+        transactionEvent.setAmount(amount);
+        transactionEvent.setType(OperationType.DEBIT.name());
+        transactionEvent.setTimestamp(LocalDateTime.now());
+
+        transactionPublisher.sendTransactionMessage(transactionEvent);
     }
 
     @Override
@@ -152,20 +167,25 @@ public class BankAccountServiceImpl implements BankAccountService {
         bankAccount.setBalance(bankAccount.getBalance() + amount);
         bankAccountRepository.save(bankAccount);
 
-           Customer customer = bankAccount.getCustomer(); 
-    Long customerId = customer.getId(); 
+        
+        // Publish transaction event to RabbitMQ
+        TransactionEvent transactionEvent = new TransactionEvent();
+          transactionEvent.setCustomerId(bankAccount.getCustomer().getId());
+        transactionEvent.setTransactionId(accountOperation.getId());
+        transactionEvent.setAccountId(bankAccount.getId());
+        transactionEvent.setAmount(amount);
+        transactionEvent.setType(OperationType.CREDIT.name());
+        transactionEvent.setTimestamp(LocalDateTime.now());
 
-        notificationService.sendTransactionNotification(customerId, bankAccount.getId(), amount);
-
-
+        transactionPublisher.sendTransactionMessage(transactionEvent);
     }
 
     @Override
-    public void transfer(String accountIdSource, String accountIdDestination, double amount)
+    public void transfer(String accountId, String accountIdDestination, double amount)
             throws BankAccountNotFoundException, BalanceNotSufficientException {
 
-        credit(accountIdDestination, amount, "Transfer from" + accountIdSource);
-        debit(accountIdSource, amount, "Transfer to" + accountIdDestination);
+        credit(accountIdDestination, amount, "Transfer from" + accountId);
+        debit(accountId, amount, "Transfer to" + accountIdDestination);
 
     }
 
@@ -232,10 +252,32 @@ public class BankAccountServiceImpl implements BankAccountService {
 
     @Override
     public List<CustomerDTO> searchCustomers(String keyword) {
-        List<Customer> customers = customerRepository.searchCustomer(keyword);
+        List<Customer> customers = customerRepository.findByUsernameContainingIgnoreCase(keyword);
         List<CustomerDTO> customerDTOS = customers.stream().map(cust -> dtoMapper.fromCustomer(cust))
                 .collect(Collectors.toList());
         return customerDTOS;
+    }
+
+    @Override
+    public List<BankAccountDTO> getAccountDTOs(Long customerId) throws BankAccountNotFoundException, CustomerNotFoundException {
+      Customer customer = customerRepository.findById(customerId).orElseThrow(() -> new CustomerNotFoundException("Customer not found"));
+      List<BankAccount> bankAccounts = bankAccountRepository.findByCustomerId(customer.getId());
+      if(bankAccounts.isEmpty()){
+        throw new BankAccountNotFoundException("No bank accounts found for the customer");
+      }
+      List<BankAccountDTO> bankAccountDTOs = bankAccounts.stream().map(bankAccount -> {
+            if (bankAccount instanceof SavingAccount) {
+                SavingAccount savingAccount = (SavingAccount) bankAccount;
+                return dtoMapper.fromSavingAccount(savingAccount);
+            } else {
+                CurrentAccount currentAccount = (CurrentAccount) bankAccount;
+                return dtoMapper.fromCurrentBankAccount(currentAccount);
+            }
+        }).collect(Collectors.toList());
+        return bankAccountDTOs;
+
+      
+	  
     }
 
 }
