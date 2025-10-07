@@ -1,12 +1,8 @@
 package ebanking.back.backend.services;
 
-import java.time.LocalDateTime;
-import java.util.Date;
-
 import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Service;
 
-import ebanking.back.backend.dtos.notification.TransactionNotificationDTO;
 import ebanking.back.backend.model.TransactionEvent;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;

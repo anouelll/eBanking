@@ -65,6 +65,7 @@ public class SecurityConfig {
                         .requestMatchers("/v3/api-docs/**", "/swagger-ui/**", "/swagger-ui.html").permitAll()
                         .requestMatchers("/topic/**").permitAll()
                         .requestMatchers(HttpMethod.OPTIONS,"/**").permitAll()
+                        .requestMatchers("/actuator/**").permitAll()
                         .anyRequest().authenticated())
                 .oauth2ResourceServer(oa -> oa.jwt(Customizer.withDefaults())).build();
     }
